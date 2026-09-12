@@ -4,7 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#10213e" />
+  <meta name="description" content="Practice calculating the day of the week for any date with the Doomsday algorithm — a self-contained, offline-friendly browser app." />
   <title>Doomsday Desk — weekday practice</title>
+  <link rel="canonical" href="https://benmch.github.io/doomsday/" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f9b942'/%3E%3Ctext x='32' y='45' font-family='Arial,Helvetica,sans-serif' font-size='36' font-weight='900' text-anchor='middle' fill='%2310213e'%3E7%3C/text%3E%3C/svg%3E" />
+  <meta property="og:title" content="Doomsday Desk — weekday practice" />
+  <meta property="og:description" content="Learn to calculate the day of the week for any date with the Doomsday algorithm." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://benmch.github.io/doomsday/" />
+  <meta name="twitter:card" content="summary" />
   <style>
     :root { color-scheme:light dark; --ink:#10213e; --muted:#5c6c86; --paper:#f6f7f9; --card:#fff; --line:#d9e0ea; --blue:#315ecc; --blue-2:#eaf0ff; --gold:#f9b942; --green:#0a8b62; --red:#b93b54; --soft:#f3f6fb; --shadow:0 12px 35px rgba(21,43,77,.09); }
     * { box-sizing:border-box; }
@@ -30,10 +38,14 @@
     .weekday { min-height:72px; border:1px solid var(--line); border-radius:12px; padding:8px 3px; background:#fff; color:var(--ink); font-size:.77rem; font-weight:750; }
     .weekday:hover,.weekday:focus-visible { outline:none; border-color:var(--blue); background:var(--blue-2); }
     .weekday.selected { color:#fff; border-color:var(--blue); background:var(--blue); }
+    .weekday.correct { color:#fff; border-color:var(--green); background:var(--green); }
+    .weekday.wrong { border-color:var(--red); background:transparent; }
     .feedback { min-height:26px; margin-top:16px; font-weight:700; } .feedback.good { color:var(--green); } .feedback.bad { color:var(--red); }
+    .solution { margin-top:14px; } .solution ol { margin:8px 0 0; padding-left:20px; color:var(--muted); font-size:.92rem; } .solution li { margin:4px 0; } .solution b { color:var(--ink); }
     .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:13px; }
     .primary,.secondary { min-height:44px; border-radius:10px; padding:0 15px; font-weight:750; }
     .primary { border:1px solid var(--blue); background:var(--blue); color:#fff; }.primary:hover { background:#244cae; }.secondary { border:1px solid var(--line); color:var(--ink); background:var(--card); }.secondary:hover { background:var(--soft); }
+    .primary:disabled,.secondary:disabled { opacity:.5; cursor:not-allowed; }
     .stats { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:17px; }.stat { border-radius:13px; padding:13px; background:var(--soft); }.stat b { display:block; font-size:1.45rem; letter-spacing:-.04em; }.stat span { color:var(--muted); font-size:.78rem; }
     .settings h2,.reference h2 { font-size:1.25rem; letter-spacing:-.025em; }.settings p { margin:7px 0 18px; color:var(--muted); font-size:.92rem; }
     label { display:block; margin:13px 0 6px; color:#40516b; font-size:.84rem; font-weight:750; } select,input[type=number] { width:100%; min-height:43px; border:1px solid var(--line); border-radius:9px; padding:0 10px; background:var(--card); color:var(--ink); }
@@ -42,7 +54,7 @@
     .reference-split { display:grid; grid-template-columns:1fr 1fr; gap:18px; }.table-wrap { overflow:auto; border:1px solid var(--line); border-radius:12px; } table { border-collapse:collapse; width:100%; min-width:360px; } th,td { padding:10px 12px; text-align:left; border-bottom:1px solid var(--line); } th { background:#f3f6fb; font-size:.8rem; color:#40516b; } td { font-size:.9rem; } tr:last-child td { border:0; }.month-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px 16px; margin-top:12px; }.month-grid div { padding-bottom:7px; border-bottom:1px solid #e8edf4; font-size:.9rem; }.month-grid b { color:var(--blue); }
     details { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:0 15px; } summary { padding:14px 0; cursor:pointer; font-weight:750; } details p { padding-bottom:14px; color:var(--muted); }
     .mini { color:var(--muted); font-size:.85rem; }.hidden { display:none!important; }
-    @media (prefers-color-scheme:dark) { :root { --ink:#edf3ff; --muted:#aebed8; --paper:#0d1525; --card:#152137; --line:#30405c; --blue:#8eb1ff; --blue-2:#213c70; --gold:#ffd166; --green:#4ed7a5; --red:#ff8ca0; --soft:#1c2b45; --shadow:0 12px 35px rgba(0,0,0,.25); } header { background:#091120; } nav button.active,nav button:hover { background:#263b63; } .weekday { background:var(--card); color:var(--ink); }.weekday:hover,.weekday:focus-visible { background:var(--soft); }.weekday.selected { background:#527ddd; border-color:#527ddd; color:#fff; } label,th { color:#c4d3eb; } th { background:var(--soft); }.formula { color:#cbd9ff; }.month-grid div { border-color:var(--line); } }
+    @media (prefers-color-scheme:dark) { :root { --ink:#edf3ff; --muted:#aebed8; --paper:#0d1525; --card:#152137; --line:#30405c; --blue:#8eb1ff; --blue-2:#213c70; --gold:#ffd166; --green:#4ed7a5; --red:#ff8ca0; --soft:#1c2b45; --shadow:0 12px 35px rgba(0,0,0,.25); } header { background:#091120; } nav button.active,nav button:hover { background:#263b63; } .weekday { background:var(--card); color:var(--ink); }.weekday:hover,.weekday:focus-visible { background:var(--soft); }.weekday.selected { background:#527ddd; border-color:#527ddd; color:#fff; }.weekday.correct { background:var(--green); border-color:var(--green); color:#06301f; } label,th { color:#c4d3eb; } th { background:var(--soft); }.formula { color:#cbd9ff; }.month-grid div { border-color:var(--line); } }
     @media (max-width:760px) { .practice-grid,.reference-split { grid-template-columns:1fr; }.steps { grid-template-columns:1fr; }.step { padding:15px; }.weekdays { grid-template-columns:repeat(4,1fr); }.weekday { min-height:54px; }.shell { width:min(100% - 22px,700px); } header { padding-top:20px; } main { padding-top:16px; } }
   </style>
 </head>
@@ -58,10 +70,11 @@
           <p class="eyebrow">Your date</p><div class="date" id="questionDate" aria-live="polite">—</div>
           <p class="hint">What day of the week was it? Work it out first, then choose your answer.</p>
           <div class="weekdays" role="group" aria-label="Choose the weekday">
-            <button class="weekday" data-day="0">Sunday</button><button class="weekday" data-day="1">Monday</button><button class="weekday" data-day="2">Tuesday</button><button class="weekday" data-day="3">Wednesday</button><button class="weekday" data-day="4">Thursday</button><button class="weekday" data-day="5">Friday</button><button class="weekday" data-day="6">Saturday</button>
+            <button class="weekday" data-day="0" aria-pressed="false">Sunday</button><button class="weekday" data-day="1" aria-pressed="false">Monday</button><button class="weekday" data-day="2" aria-pressed="false">Tuesday</button><button class="weekday" data-day="3" aria-pressed="false">Wednesday</button><button class="weekday" data-day="4" aria-pressed="false">Thursday</button><button class="weekday" data-day="5" aria-pressed="false">Friday</button><button class="weekday" data-day="6" aria-pressed="false">Saturday</button>
           </div>
           <div id="feedback" class="feedback" aria-live="polite"></div>
-          <div class="actions"><button id="check" class="primary" disabled>Check answer</button><button id="next" class="secondary">New date</button></div>
+          <div id="solutionSteps" class="solution hidden" aria-live="polite"></div>
+          <div class="actions"><button id="check" class="primary" disabled>Check answer</button><button id="solution" class="secondary" disabled>Show solution</button><button id="next" class="secondary">New date</button></div>
         </div>
         <aside class="card settings">
           <h2>Practice settings</h2><p>Dates use the proleptic Gregorian calendar. Pick a range that matches your goal.</p>
@@ -92,20 +105,52 @@
   <script>
   (() => {
     const $ = s => document.querySelector(s), days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-    const key = 'doomsday-desk-v1'; let state = JSON.parse(localStorage.getItem(key) || '{"attempts":0,"correct":0,"from":1900,"to":2099,"style":"long"}'); let current, selected = null, checked = false;
-    const save = () => localStorage.setItem(key, JSON.stringify(state));
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const key = 'doomsday-desk-v1', defaults = { attempts:0, correct:0, from:1900, to:2099, style:'long' };
     const leap = y => y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0);
-    const dateText = d => state.style === 'numeric' ? `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}` : new Intl.DateTimeFormat('en-US',{month:'long',day:'numeric',year:'numeric',timeZone:'UTC'}).format(d);
+    const centuryAnchor = y => [2,0,5,3][Math.floor(y/100)%4]; // 2000s Tue, 2100s Sun, 1800s Fri, 1900s Wed
+    const yearAnchor = y => { const yy = y%100; return (centuryAnchor(y) + Math.floor(yy/12) + yy%12 + Math.floor((yy%12)/4)) % 7; };
+    const monthAnchors = [[3,4],[28,29],[14,14],[4,4],[9,9],[6,6],[11,11],[8,8],[5,5],[10,10],[7,7],[12,12]];
+    const monthAnchor = (y,m) => monthAnchors[m-1][leap(y) && m <= 2 ? 1 : 0];
+    const doomsdayWeekday = (y,m,d) => (yearAnchor(y) + ((((d - monthAnchor(y,m)) % 7) + 7) % 7)) % 7;
+
+    function solutionSteps(y,m,d) {
+      const yy = y%100, twelves = Math.floor(yy/12), rem = yy%12, fours = Math.floor(rem/4);
+      const anchorDay = monthAnchor(y,m), offset = ((((d - anchorDay) % 7) + 7) % 7);
+      return { centuryYear:Math.floor(y/100)*100, century:days[centuryAnchor(y)], yy, twelves, rem, fours, sum:twelves+rem+fours, doomsday:days[yearAnchor(y)], month:months[m-1], anchorDay, leapAdjusted:leap(y) && m <= 2, offset, weekday:days[doomsdayWeekday(y,m,d)] };
+    }
+
+    function loadState() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(key) || 'null');
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { ...defaults };
+        const s = { ...defaults };
+        if (Number.isInteger(raw.attempts) && raw.attempts >= 0) s.attempts = raw.attempts;
+        if (Number.isInteger(raw.correct) && raw.correct >= 0 && raw.correct <= s.attempts) s.correct = raw.correct;
+        if (Number.isInteger(raw.from) && raw.from >= 1583 && raw.from <= 9999) s.from = raw.from;
+        if (Number.isInteger(raw.to) && raw.to >= 1583 && raw.to <= 9999) s.to = raw.to;
+        if (raw.style === 'long' || raw.style === 'numeric') s.style = raw.style;
+        return s;
+      } catch { return { ...defaults }; }
+    }
+
+    let state = loadState(); let current, selected = null, checked = false;
+    const save = () => { try { localStorage.setItem(key, JSON.stringify(state)); } catch {} };
+    const dateText = d => state.style === 'numeric' ? `${String(d.getUTCMonth()+1).padStart(2,'0')}/${String(d.getUTCDate()).padStart(2,'0')}/${d.getUTCFullYear()}` : new Intl.DateTimeFormat('en-US',{month:'long',day:'numeric',year:'numeric',timeZone:'UTC'}).format(d);
     function renderStats() { $('#attempts').textContent = state.attempts; $('#rate').textContent = state.attempts ? `${Math.round(state.correct/state.attempts*100)}%` : '—'; }
-    function randomDate() { let from = Math.max(1583,Math.min(9999,Number($('#fromYear').value)||1900)), to = Math.max(1583,Math.min(9999,Number($('#toYear').value)||2099)); if(from > to) [from,to]=[to,from]; state.from=from; state.to=to; save(); const y = from + Math.floor(Math.random()*(to-from+1)); const m = Math.floor(Math.random()*12); const d = 1 + Math.floor(Math.random()*new Date(Date.UTC(y,m+1,0)).getUTCDate()); current = new Date(Date.UTC(y,m,d)); selected=null; checked=false; $('#questionDate').textContent=dateText(current); $('#feedback').textContent=''; $('#feedback').className='feedback'; $('#check').disabled=true; document.querySelectorAll('.weekday').forEach(b=>b.className='weekday'); }
-    document.querySelectorAll('.weekday').forEach(b => b.addEventListener('click', () => { if(checked) return; selected=Number(b.dataset.day); document.querySelectorAll('.weekday').forEach(x=>x.classList.toggle('selected',x===b)); $('#check').disabled=false; }));
-    $('#check').addEventListener('click', () => { if(selected===null || checked) return; checked=true; const answer=current.getUTCDay(), ok=answer===selected; state.attempts++; if(ok)state.correct++; save(); renderStats(); document.querySelectorAll('.weekday').forEach(b=>{const v=Number(b.dataset.day); if(v===answer) b.classList.add('selected');}); const f=$('#feedback'); f.textContent= ok ? `Correct — ${days[answer]}.` : `Not quite — it was ${days[answer]}.`; f.className='feedback '+(ok?'good':'bad'); $('#check').disabled=true; });
+    function clearSelection() { document.querySelectorAll('.weekday').forEach(b => { b.classList.remove('selected','correct','wrong'); b.setAttribute('aria-pressed','false'); }); }
+    function randomDate() { let from = Math.max(1583,Math.min(9999,Number($('#fromYear').value)||1900)), to = Math.max(1583,Math.min(9999,Number($('#toYear').value)||2099)); if(from > to) [from,to]=[to,from]; state.from=from; state.to=to; save(); const y = from + Math.floor(Math.random()*(to-from+1)); const m = Math.floor(Math.random()*12); const d = 1 + Math.floor(Math.random()*new Date(Date.UTC(y,m+1,0)).getUTCDate()); current = new Date(Date.UTC(y,m,d)); selected=null; checked=false; $('#questionDate').textContent=dateText(current); $('#feedback').textContent=''; $('#feedback').className='feedback'; $('#check').disabled=true; $('#solution').disabled=true; $('#solutionSteps').innerHTML=''; $('#solutionSteps').classList.add('hidden'); clearSelection(); }
+    document.querySelectorAll('.weekday').forEach(b => b.addEventListener('click', () => { if(checked) return; selected=Number(b.dataset.day); document.querySelectorAll('.weekday').forEach(x=>{x.classList.toggle('selected',x===b);x.setAttribute('aria-pressed',String(x===b));}); $('#check').disabled=false; }));
+    $('#check').addEventListener('click', () => { if(selected===null || checked) return; checked=true; const answer=current.getUTCDay(), ok=answer===selected; state.attempts++; if(ok)state.correct++; save(); renderStats(); clearSelection(); document.querySelectorAll('.weekday').forEach(b=>{const v=Number(b.dataset.day); b.classList.toggle('correct', v===answer); b.classList.toggle('wrong', !ok && v===selected);}); const f=$('#feedback'); f.textContent= ok ? `Correct — ${days[answer]}.` : `Not quite — it was ${days[answer]}.`; f.className='feedback '+(ok?'good':'bad'); $('#check').disabled=true; $('#solution').disabled=false; });
+    function renderSolution() { const y=current.getUTCFullYear(), m=current.getUTCMonth()+1, d=current.getUTCDate(), s=solutionSteps(y,m,d); const shift = s.leapAdjusted ? ' — leap year, so Jan/Feb anchors shift one day later' : ''; $('#solutionSteps').innerHTML = `<ol><li><b>${s.centuryYear}s century anchor:</b> ${s.century}</li><li><b>Year ${String(s.yy).padStart(2,'0')}:</b> ${s.twelves} + ${s.rem} + ${s.fours} = ${s.sum}, so ${s.century} + ${s.sum} days = <b>${s.doomsday}</b></li><li><b>Anchor date:</b> ${s.month} ${s.anchorDay} is a Doomsday${shift}</li><li><b>Count:</b> ${s.offset} ${s.offset===1?'day':'days'} from ${s.month} ${s.anchorDay} → <b>${s.weekday}</b></li></ol>`; $('#solutionSteps').classList.remove('hidden'); }
+    $('#solution').addEventListener('click', () => { if(current && checked) renderSolution(); });
     $('#next').addEventListener('click', randomDate);
     $('#fromYear').value=state.from; $('#toYear').value=state.to; $('#dateStyle').value=state.style;
     $('#dateStyle').addEventListener('change',e=>{state.style=e.target.value;save();if(current)$('#questionDate').textContent=dateText(current)});
     $('#reset').addEventListener('click',()=>{ if(confirm('Reset your saved attempts and correct answers on this device?')) { state.attempts=0;state.correct=0;save();renderStats(); } });
     document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===b.dataset.view));window.scrollTo({top:0,behavior:'smooth'});}));
     renderStats(); randomDate();
+    window.Doomsday = { leap, centuryAnchor, yearAnchor, monthAnchor, doomsdayWeekday, solutionSteps };
   })();
   </script>
 </body>
